@@ -78,6 +78,10 @@ function parseSimpleYaml(content, filePath) {
 }
 
 function normalizeDomains(domains, filePath) {
+  if (domains === undefined || domains === null || domains === 'null') {
+    return [];
+  }
+
   if (!Array.isArray(domains)) {
     throw new Error(`Invalid YAML in ${filePath}: domains must be a list`);
   }
@@ -106,6 +110,10 @@ function validateCidr(cidr, filePath) {
 }
 
 function normalizeCidrs(cidrs, filePath) {
+  if (cidrs === undefined || cidrs === null || cidrs === 'null') {
+    return [];
+  }
+
   if (!Array.isArray(cidrs)) {
     throw new Error(`Invalid YAML in ${filePath}: cidrs must be a list`);
   }
