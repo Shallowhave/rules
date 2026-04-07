@@ -8,7 +8,6 @@ domains:
   - alist.960298.xyz
   - mp.960298.xyz
   - sub.960298.xyz
-  - ql.960298.xyz
 cidrs:
   - 192.168.1.0/24
   - 192.168.3.0/24
