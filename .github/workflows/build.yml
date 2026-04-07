@@ -2,6 +2,8 @@ name: build-rules
 
 on:
   push:
+    paths-ignore:
+      - 'dist/**'
   workflow_dispatch:
   schedule:
     - cron: '0 16 * * *'

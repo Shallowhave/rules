@@ -178,6 +178,7 @@ function writeProfileOutput(profile, outputDir) {
 }
 
 function buildAllProfiles(inputDir, outputDir) {
+  rmSync(outputDir, { recursive: true, force: true });
   mkdirSync(outputDir, { recursive: true });
 
   const profileDirs = readdirSync(inputDir)
