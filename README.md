@@ -1,4 +1,4 @@
-# WireGuard Rules Generator
+# Rules Generator
 
 这个仓库用来维护按用户分开的 WireGuard 分流规则，并自动生成以下平台可引用的规则文件：
 
@@ -23,31 +23,11 @@ dist/<name>/...              # 自动生成产物
 name: me
 description: my wireguard split rules
 domains:
-  - nas.960298.xyz
-  - router.960298.xyz
+  - nas.xxx
+  - router.xxx
 cidrs:
   - 192.168.1.0/24
   - 192.168.3.0/24
-```
-
-说明：
-
-- `domains` 使用精确域名匹配
-- `cidrs` 支持 IPv4/IPv6 CIDR
-- 所有规则都统一表示“走 `wg`”
-
-## 本地使用
-
-```bash
-npm test
-npm run build
-```
-
-PowerShell 如果拦截 `npm.ps1`，请使用：
-
-```powershell
-npm.cmd test
-npm.cmd run build
 ```
 
 ## 生成产物
