@@ -1,0 +1,47 @@
+name: build-rules
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install sing-box
+        run: curl -fsSL https://sing-box.app/install.sh | sh
+
+      - name: Build rules
+        run: npm run build
+
+      - name: Compile sing-box rule-set
+        shell: bash
+        run: |
+          while IFS= read -r source_file; do
+            output_file="${source_file%.source.json}.srs"
+            sing-box rule-set compile --output "$output_file" "$source_file"
+            rm -f "$source_file"
+          done < <(find dist -type f -name 'sing-box.source.json' | sort)
+
+      - name: Commit generated dist
+        run: |
+          if git diff --quiet -- dist; then
+            echo "No dist changes"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add dist
+          git commit -m "chore: update generated rules"
+          git push

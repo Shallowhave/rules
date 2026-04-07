@@ -1,0 +1,11 @@
+payload:
+  - DOMAIN,alist.960298.xyz
+  - DOMAIN,emby.960298.xyz
+  - DOMAIN,immich.960298.xyz
+  - DOMAIN,mp.960298.xyz
+  - DOMAIN,nas.960298.xyz
+  - DOMAIN,ql.960298.xyz
+  - DOMAIN,router.960298.xyz
+  - DOMAIN,sub.960298.xyz
+  - IP-CIDR,192.168.1.0/24,no-resolve
+  - IP-CIDR,192.168.3.0/24,no-resolve
