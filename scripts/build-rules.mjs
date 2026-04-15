@@ -168,6 +168,22 @@ function toClash(profile) {
   return ["payload:", ...payload, ""].join("\n");
 }
 
+function toMihomoDomain(profile) {
+  return [
+    "payload:",
+    ...profile.domains.map((domain) => `  - ${JSON.stringify(domain)}`),
+    "",
+  ].join("\n");
+}
+
+function toMihomoIpcidr(profile) {
+  return [
+    "payload:",
+    ...profile.cidrs.map((cidr) => `  - ${JSON.stringify(cidr)}`),
+    "",
+  ].join("\n");
+}
+
 function toSingBox(profile) {
   const rules = [];
   if (profile.domains.length > 0) {
@@ -198,6 +214,20 @@ function writeProfileOutput(profile, outputDir) {
     toClash(profile),
     "utf8",
   );
+  if (profile.domains.length > 0) {
+    writeFileSync(
+      path.join(profileOutputDir, "mihomo-domain.yaml"),
+      toMihomoDomain(profile),
+      "utf8",
+    );
+  }
+  if (profile.cidrs.length > 0) {
+    writeFileSync(
+      path.join(profileOutputDir, "mihomo-ipcidr.yaml"),
+      toMihomoIpcidr(profile),
+      "utf8",
+    );
+  }
   writeFileSync(
     path.join(profileOutputDir, "sing-box.source.json"),
     toSingBox(profile),
