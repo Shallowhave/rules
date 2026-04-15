@@ -1,22 +1,29 @@
-import { mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
-import path from 'node:path';
-import process from 'node:process';
-import { isIP } from 'node:net';
+import {
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from "node:fs";
+import path from "node:path";
+import process from "node:process";
+import { isIP } from "node:net";
 
-const ALLOWED_KEYS = new Set(['name', 'description', 'domains', 'cidrs']);
+const ALLOWED_KEYS = new Set(["name", "description", "domains", "cidrs"]);
 
 function parseArgs(argv) {
   const args = {
-    input: 'profiles',
-    output: 'dist',
+    input: "profiles",
+    output: "dist",
   };
 
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
-    if (arg === '--input') {
+    if (arg === "--input") {
       args.input = argv[index + 1];
       index += 1;
-    } else if (arg === '--output') {
+    } else if (arg === "--output") {
       args.output = argv[index + 1];
       index += 1;
     } else {
@@ -32,27 +39,29 @@ function parseSimpleYaml(content, filePath) {
   let currentListKey = null;
 
   for (const rawLine of content.split(/\r?\n/)) {
-    const line = rawLine.replace(/\t/g, '    ');
+    const line = rawLine.replace(/\t/g, "    ");
     const trimmed = line.trim();
 
-    if (!trimmed || trimmed.startsWith('#')) {
+    if (!trimmed || trimmed.startsWith("#")) {
       continue;
     }
 
-    if (line.startsWith('  - ')) {
+    if (line.startsWith("  - ")) {
       if (!currentListKey) {
-        throw new Error(`Invalid YAML in ${filePath}: list item without a parent key`);
+        throw new Error(
+          `Invalid YAML in ${filePath}: list item without a parent key`,
+        );
       }
 
       result[currentListKey].push(trimmed.slice(2).trim());
       continue;
     }
 
-    if (line.startsWith(' ')) {
+    if (line.startsWith(" ")) {
       throw new Error(`Invalid YAML in ${filePath}: unsupported indentation`);
     }
 
-    const separatorIndex = line.indexOf(':');
+    const separatorIndex = line.indexOf(":");
     if (separatorIndex === -1) {
       throw new Error(`Invalid YAML in ${filePath}: expected key/value pair`);
     }
@@ -78,7 +87,7 @@ function parseSimpleYaml(content, filePath) {
 }
 
 function normalizeDomains(domains, filePath) {
-  if (domains === undefined || domains === null || domains === 'null') {
+  if (domains === undefined || domains === null || domains === "null") {
     return [];
   }
 
@@ -86,11 +95,15 @@ function normalizeDomains(domains, filePath) {
     throw new Error(`Invalid YAML in ${filePath}: domains must be a list`);
   }
 
-  return [...new Set(domains.map((item) => String(item).trim().toLowerCase()).filter(Boolean))].sort();
+  return [
+    ...new Set(
+      domains.map((item) => String(item).trim().toLowerCase()).filter(Boolean),
+    ),
+  ].sort();
 }
 
 function validateCidr(cidr, filePath) {
-  const [address, prefix] = String(cidr).trim().split('/');
+  const [address, prefix] = String(cidr).trim().split("/");
   if (!address || prefix === undefined) {
     throw new Error(`Invalid CIDR in ${filePath}: ${cidr}`);
   }
@@ -102,7 +115,11 @@ function validateCidr(cidr, filePath) {
 
   const prefixNumber = Number(prefix);
   const maxPrefix = ipVersion === 4 ? 32 : 128;
-  if (!Number.isInteger(prefixNumber) || prefixNumber < 0 || prefixNumber > maxPrefix) {
+  if (
+    !Number.isInteger(prefixNumber) ||
+    prefixNumber < 0 ||
+    prefixNumber > maxPrefix
+  ) {
     throw new Error(`Invalid CIDR in ${filePath}: ${cidr}`);
   }
 
@@ -110,7 +127,7 @@ function validateCidr(cidr, filePath) {
 }
 
 function normalizeCidrs(cidrs, filePath) {
-  if (cidrs === undefined || cidrs === null || cidrs === 'null') {
+  if (cidrs === undefined || cidrs === null || cidrs === "null") {
     return [];
   }
 
@@ -118,20 +135,25 @@ function normalizeCidrs(cidrs, filePath) {
     throw new Error(`Invalid YAML in ${filePath}: cidrs must be a list`);
   }
 
-  return [...new Set(cidrs.map((item) => validateCidr(item, filePath)).filter(Boolean))].sort();
+  return [
+    ...new Set(
+      cidrs.map((item) => validateCidr(item, filePath)).filter(Boolean),
+    ),
+  ].sort();
 }
 
 function loadProfile(profileDir) {
-  const filePath = path.join(profileDir, 'rules.yaml');
-  const parsed = parseSimpleYaml(readFileSync(filePath, 'utf8'), filePath);
+  const filePath = path.join(profileDir, "rules.yaml");
+  const parsed = parseSimpleYaml(readFileSync(filePath, "utf8"), filePath);
 
-  if (!parsed.name || typeof parsed.name !== 'string') {
+  if (!parsed.name || typeof parsed.name !== "string") {
     throw new Error(`Invalid YAML in ${filePath}: name is required`);
   }
 
   return {
     name: parsed.name.trim(),
-    description: typeof parsed.description === 'string' ? parsed.description.trim() : '',
+    description:
+      typeof parsed.description === "string" ? parsed.description.trim() : "",
     domains: normalizeDomains(parsed.domains ?? [], filePath),
     cidrs: normalizeCidrs(parsed.cidrs ?? [], filePath),
   };
@@ -143,7 +165,7 @@ function toClash(profile) {
     ...profile.cidrs.map((cidr) => `  - IP-CIDR,${cidr},no-resolve`),
   ];
 
-  return ['payload:', ...payload, ''].join('\n');
+  return ["payload:", ...payload, ""].join("\n");
 }
 
 function toSingBox(profile) {
@@ -160,10 +182,10 @@ function toSingBox(profile) {
 
 function toRuleList(profile) {
   return [
-    ...profile.domains.map((domain) => `DOMAIN,${domain},wg`),
-    ...profile.cidrs.map((cidr) => `IP-CIDR,${cidr},wg,no-resolve`),
-    '',
-  ].join('\n');
+    ...profile.domains.map((domain) => `DOMAIN,${domain}`),
+    ...profile.cidrs.map((cidr) => `IP-CIDR,${cidr},no-resolve`),
+    "",
+  ].join("\n");
 }
 
 function writeProfileOutput(profile, outputDir) {
@@ -171,10 +193,26 @@ function writeProfileOutput(profile, outputDir) {
   rmSync(profileOutputDir, { recursive: true, force: true });
   mkdirSync(profileOutputDir, { recursive: true });
 
-  writeFileSync(path.join(profileOutputDir, 'clash.yaml'), toClash(profile), 'utf8');
-  writeFileSync(path.join(profileOutputDir, 'sing-box.source.json'), toSingBox(profile), 'utf8');
-  writeFileSync(path.join(profileOutputDir, 'surge.list'), toRuleList(profile), 'utf8');
-  writeFileSync(path.join(profileOutputDir, 'shadowrocket.list'), toRuleList(profile), 'utf8');
+  writeFileSync(
+    path.join(profileOutputDir, "clash.yaml"),
+    toClash(profile),
+    "utf8",
+  );
+  writeFileSync(
+    path.join(profileOutputDir, "sing-box.source.json"),
+    toSingBox(profile),
+    "utf8",
+  );
+  writeFileSync(
+    path.join(profileOutputDir, "surge.list"),
+    toRuleList(profile),
+    "utf8",
+  );
+  writeFileSync(
+    path.join(profileOutputDir, "shadowrocket.list"),
+    toRuleList(profile),
+    "utf8",
+  );
 }
 
 function buildAllProfiles(inputDir, outputDir) {
